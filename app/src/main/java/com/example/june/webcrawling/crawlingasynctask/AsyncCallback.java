@@ -1,4 +1,6 @@
-package com.example.june.webcrawling;
+package com.example.june.webcrawling.crawlingasynctask;
+
+import com.example.june.webcrawling.CryptoCurrency;
 
 /**
  * Created by JeongByungJune on 2018-01-02.

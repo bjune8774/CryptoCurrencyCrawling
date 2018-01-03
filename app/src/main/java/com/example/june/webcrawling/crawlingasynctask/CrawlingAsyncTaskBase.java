@@ -2,8 +2,6 @@ package com.example.june.webcrawling.crawlingasynctask;
 
 import android.os.AsyncTask;
 
-import com.example.june.webcrawling.AsyncCallback;
-
 /**
  * Created by bjune.jeong on 2018-01-03.
  */

@@ -9,7 +9,7 @@ import java.util.List;
  */
 
 public class CryptoCurrency {
-    private List<String> mCurrencyList = new ArrayList<String>();
+    private static List<String> mCurrencyList = new ArrayList<String>();
     private HashMap<String, Double> mCurrencyPrice = new HashMap<String, Double>();
 
     public CryptoCurrency() {
@@ -32,7 +32,15 @@ public class CryptoCurrency {
         return mCurrencyPrice.get(currencyName);
     }
 
-    public List<String> getCurrencyList() {
+    public HashMap<String, Double> getCurrencyPrices() {
+        return mCurrencyPrice;
+    }
+
+    public static List<String> getCurrencyList() {
         return mCurrencyList;
+    }
+
+    public static String getCurrencyName(int idx) {
+        return mCurrencyList.get(idx);
     }
 }

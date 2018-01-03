@@ -1,17 +1,11 @@
 package com.example.june.webcrawling.crawlingasynctask;
 
-import android.os.AsyncTask;
-import android.util.Log;
-
-import com.example.june.webcrawling.AsyncCallback;
 import com.example.june.webcrawling.CryptoCurrency;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-
-import java.text.DecimalFormat;
 
 /**
  * Created by JeongByungJune on 2018-01-01.
@@ -33,7 +27,9 @@ public class CrawlingAsyncTaskBinance extends CrawlingAsyncTaskBase {
         double price = 0;
 
         while(isRunning()) {
-            for(String currencyName : mBinanceCurrency.getCurrencyList()) {
+            for (int i = 0; i < CryptoCurrency.getCurrencyList().size(); i++) {
+                String currencyName = CryptoCurrency.getCurrencyName(i);
+
                 if(currencyName.equals("BTC")) {
                     url = BINANCE_URL_BASE + currencyName + USDT_MARKET;
                 } else {
@@ -57,7 +53,7 @@ public class CrawlingAsyncTaskBinance extends CrawlingAsyncTaskBase {
             getCallback().onFinish(mBinanceCurrency);
 
             try {
-                Thread.sleep(33);
+                Thread.sleep(8);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
