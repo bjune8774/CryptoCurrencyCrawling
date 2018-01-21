@@ -20,8 +20,7 @@ public class MainActivity extends AppCompatActivity {
 
     private CrawlingAsyncTaskBinance mBnCrawlingAsyncTask;
     private CrawlingAsyncTaskUpbit mUbCrawlingAsyncTask;
-    private CryptoCurrency mBinanceCurrency = null;
-    private CryptoCurrency mUpbitCurrency = null;
+
     private UpdateHandler mUpdateHandler = new UpdateHandler();
 
     private RecyclerView mContentRecyclerView;
@@ -38,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
         mContentRecyclerView.setLayoutManager(layoutManager);
 
         mAdapter = new ContentAdapter(this);
+        mAdapter.setLeftExchange(CryptoCurrency.EXCHANGE_UPBIT);
+        mAdapter.setRightExchange(CryptoCurrency.EXCHANGE_BINANCE);
+
         mContentRecyclerView.setAdapter(mAdapter);
     }
 
@@ -79,22 +81,12 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "handleMessage");
             switch (msg.what) {
                 case MSG_UPDATE_BINANCE:
-                    mBinanceCurrency = (CryptoCurrency) msg.obj;
-//                    if (mUpbitCurrency != null) {
-//                        Log.d(TAG, "binance");
-//                        String btc = mBinanceCurrency.getCurrencyList().get(0);
-//                        //mTextView.setText(df.format(mBinanceCurrency.getCurrencyPrice(btc)));
-//                    }
-                    mAdapter.setBinancePrices(mBinanceCurrency.getCurrencyPrices());
-                    break;
+//                    mBinanceCurrency = (CryptoCurrency) msg.obj;
+//                    mAdapter.setBinancePrices(mBinanceCurrency.getCurrencyPrices());
+//                    break;
                 case MSG_UPDATE_UPBIT:
-                    mUpbitCurrency = (CryptoCurrency) msg.obj;
-//                    if (mBinanceCurrency != null) {
-//                        Log.d(TAG, "upbit");
-//                        String btc = mUpbitCurrency.getCurrencyList().get(0);
-//                        // mTextView.setText(df.format(mUpbitCurrency.getCurrencyPrice(btc)));
-//                    }
-                    mAdapter.setUpbitPrices(mUpbitCurrency.getCurrencyPrices());
+                    CryptoCurrency currency = (CryptoCurrency) msg.obj;
+                    mAdapter.setCoinList(currency.getCoinList());
                     break;
             }
             mAdapter.notifyDataSetChanged();

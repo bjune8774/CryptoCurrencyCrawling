@@ -5,32 +5,42 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.text.DecimalFormat;
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by JeongByungJune on 2018-01-03.
  */
 
 public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.ContentHolder> {
+    private final String TAG = this.getClass().getName();
     private Context mContext;
-    private HashMap<String, Double> mUpbitPrices = null;
-    private HashMap<String, Double> mBinancePrices = null;
+    private List<CryptoCurrency.Coin> mCoinList = null;
+    private DecimalFormat mPriceDf = new DecimalFormat("#,###");
+    private DecimalFormat mPercentDf = new DecimalFormat("##.#");
 
-    private DecimalFormat mDf = new DecimalFormat("#,###.##");
+    private String mLeftExchange;
+    private String mRightExchange;
 
     public ContentAdapter(Context context) {
         mContext = context;
     }
 
-    public void setUpbitPrices(HashMap<String, Double> upbitPrices) {
-        mUpbitPrices = upbitPrices;
+    public void setCoinList(List<CryptoCurrency.Coin> coinList) {
+        if(mCoinList == null) {
+            mCoinList = coinList;
+        }
     }
 
-    public void setBinancePrices(HashMap<String, Double> binancePrices) {
-        mBinancePrices = binancePrices;
+    public void setLeftExchange(String exchange) {
+        mLeftExchange = exchange;
+    }
+
+    public void setRightExchange(String exchange) {
+        mRightExchange = exchange;
     }
 
     @Override
@@ -42,56 +52,51 @@ public class ContentAdapter extends RecyclerView.Adapter<ContentAdapter.ContentH
 
     @Override
     public void onBindViewHolder(ContentHolder holder, int position) {
-        String currency = CryptoCurrency.getCurrencyList().get(position);
+        CryptoCurrency.Coin coin = mCoinList.get(position);
 
-        holder.mCurrencyNameText.setText(currency);
+        holder.mTextCoinName.setText(coin.getNameKr());
+        holder.mTextCoinCode.setText(coin.getCode() + "/KRW");
 
-        if (mUpbitPrices != null && mBinancePrices != null) {
-            double ubKrwPrice = mUpbitPrices.get(currency);
-            double ubUsdPrice = ubKrwPrice / 1080;
+        if (mCoinList != null) {
+            CryptoCurrency.Price leftPrice = coin.getExchangePrice(mLeftExchange);
+            CryptoCurrency.Price rightPrice = coin.getExchangePrice(mRightExchange);
 
-            holder.mUpbitKrwText.setText(mDf.format(mUpbitPrices.get(currency)) + "원");
-            holder.mUpbitUsdText.setText(mDf.format(mUpbitPrices.get(currency) / 1080) + "$");
+            if (leftPrice != null && rightPrice != null) {
+                holder.mTextLeftPrice.setText(mPriceDf.format(leftPrice.krw) + "원");
+//                holder.mTextLeftPrice.setText(mPriceDf.format(leftPrice.usd) + "$");
 
-            double bnUsdBtcPrice = mBinancePrices.get("BTC");
-            double bnUsdPrice = 0;
+                holder.mTextRightPrice.setText(mPriceDf.format(rightPrice.krw) + "원");
+//                holder.mTextRightPrice.setText(mPriceDf.format(rightPrice.usd) + "$");
 
-            if(currency.equals("BTC")) {
-                bnUsdPrice = bnUsdBtcPrice;
-            } else {
-                bnUsdPrice = mBinancePrices.get(currency) * bnUsdBtcPrice;
+                holder.mTextPremium.setText(mPercentDf.format(((leftPrice.krw / rightPrice.krw) - 1) * 100) + "%");
             }
-
-            double bnKrwPrice = bnUsdPrice * 1080;
-
-            holder.mBinanceKrwText.setText(mDf.format(bnKrwPrice) + "원");
-            holder.mBinanceUsdText.setText(mDf.format(bnUsdPrice) + "$");
-
-            holder.mKrwPremium.setText(mDf.format(((ubUsdPrice / bnUsdPrice) - 1) * 100) + "%");
         }
     }
 
     @Override
     public int getItemCount() {
-        return CryptoCurrency.getCurrencyList().size();
+        if (mCoinList != null) {
+            return mCoinList.size();
+        }
+        return 0;
     }
 
     public class ContentHolder extends RecyclerView.ViewHolder {
-        private TextView mCurrencyNameText;
-        private TextView mUpbitKrwText;
-        private TextView mUpbitUsdText;
-        private TextView mBinanceKrwText;
-        private TextView mBinanceUsdText;
-        private TextView mKrwPremium;
+        private ImageView mImageCoin;
+        private TextView mTextCoinName;
+        private TextView mTextCoinCode;
+        private TextView mTextLeftPrice;
+        private TextView mTextRightPrice;
+        private TextView mTextPremium;
 
         public ContentHolder(View itemView) {
             super(itemView);
-            mCurrencyNameText = (TextView) itemView.findViewById(R.id.content_currency_name);
-            mUpbitKrwText = (TextView) itemView.findViewById(R.id.content_upbit_krw);
-            mUpbitUsdText = (TextView) itemView.findViewById(R.id.content_upbit_usd);
-            mBinanceKrwText = (TextView) itemView.findViewById(R.id.content_binance_krw);
-            mBinanceUsdText = (TextView) itemView.findViewById(R.id.content_binance_usd);
-            mKrwPremium = (TextView) itemView.findViewById(R.id.content_krw_premium);
+            mImageCoin = (ImageView) itemView.findViewById(R.id.content_coin_icon);
+            mTextCoinName = (TextView) itemView.findViewById(R.id.content_coin_name);
+            mTextCoinCode = (TextView) itemView.findViewById(R.id.content_coin_code);
+            mTextLeftPrice = (TextView) itemView.findViewById(R.id.content_left_price);
+            mTextRightPrice = (TextView) itemView.findViewById(R.id.content_right_price);
+            mTextPremium = (TextView) itemView.findViewById(R.id.content_premium);
         }
     }
 }

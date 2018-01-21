@@ -13,8 +13,8 @@ import org.jsoup.nodes.Document;
 
 public class CrawlingAsyncTaskUpbit extends CrawlingAsyncTaskBase {
     private final String TAG = this.getClass().getName();
+
     private final String UPBIT_URL_BASE = "https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.";
-    private CryptoCurrency mUpbitCurrency = new CryptoCurrency();
 
     public CrawlingAsyncTaskUpbit(AsyncCallback cb) {
         super(cb);
@@ -22,38 +22,48 @@ public class CrawlingAsyncTaskUpbit extends CrawlingAsyncTaskBase {
 
     @Override
     protected Void doInBackground(Void... params) {
+        CryptoCurrency cryptoCurrency = getCryptoCurrency();
         String url;
-        Document doc = null;
-        double price = 0;
+        double priceKrwMarket = 0;
 
         while (isRunning()) {
-            for (int i = 0; i < CryptoCurrency.getCurrencyList().size(); i++) {
-                String currencyName = CryptoCurrency.getCurrencyName(i);
-                url = UPBIT_URL_BASE + KRW_MARKET + "-" + currencyName;
+            for (CryptoCurrency.Coin coin : cryptoCurrency.getCoinList()) {
+                String code = coin.getCode();
+                url = UPBIT_URL_BASE + KRW_MARKET + "-" + code;
                 //Log.d(TAG, url);
 
-                try {
-                    doc = Jsoup.connect(url).ignoreContentType(true).get();
-                    JSONArray jsonArray = new JSONArray(doc.text());
-                    JSONObject jsonObject = (JSONObject) jsonArray.get(0);
-                    price = (double) jsonObject.get("tradePrice");
-                    //Log.d(TAG, "" + price);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    price = 0;
-                }
+                priceKrwMarket = getPriceFromUrl(url);
+                double priceUsd = priceKrwMarket / 1080;
+                double priceKrw = priceKrwMarket;
 
-                mUpbitCurrency.setCurrencyPrice(currencyName, price);
+                coin.setExchangePrice(CryptoCurrency.EXCHANGE_UPBIT, priceKrw, priceUsd);
             }
-            getCallback().onFinish(mUpbitCurrency);
+            getCallback().onFinish(cryptoCurrency);
 
             try {
-                Thread.sleep(8);
+                Thread.sleep(SLEEP_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
         return null;
+    }
+
+    private double getPriceFromUrl(String url) {
+        double price = 0;
+
+        try {
+            Document doc = Jsoup.connect(url).ignoreContentType(true).get();
+            JSONArray jsonArray = new JSONArray(doc.text());
+            JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+            price = (double) jsonObject.get("tradePrice");
+            //Log.d(TAG, "" + price);
+        } catch (Exception e) {
+            e.printStackTrace();
+            price = 0;
+        }
+
+        return price;
     }
 }

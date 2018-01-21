@@ -13,8 +13,9 @@ import org.jsoup.nodes.Document;
 
 public class CrawlingAsyncTaskBinance extends CrawlingAsyncTaskBase {
     private final String TAG = this.getClass().getName();
+
     private final String BINANCE_URL_BASE = "https://www.binance.com/api/v1/aggTrades?limit=1&symbol=";
-    private CryptoCurrency mBinanceCurrency = new CryptoCurrency();
+    private final String CODE_BTC = getCryptoCurrency().getCode(CryptoCurrency.INDEX_BTC);
 
     public CrawlingAsyncTaskBinance(AsyncCallback cb) {
         super(cb);
@@ -22,43 +23,56 @@ public class CrawlingAsyncTaskBinance extends CrawlingAsyncTaskBase {
 
     @Override
     protected Void doInBackground(Void... params) {
-        String url;
-        Document doc = null;
-        double price = 0;
+        CryptoCurrency cryptoCurrency = getCryptoCurrency();
+        String url = null;
+        double priceBtcUsdtMarket = 0;
+        double priceBtcMarket = 0;
 
-        while(isRunning()) {
-            for (int i = 0; i < CryptoCurrency.getCurrencyList().size(); i++) {
-                String currencyName = CryptoCurrency.getCurrencyName(i);
+        while (isRunning()) {
+            url = BINANCE_URL_BASE + CODE_BTC + USDT_MARKET;
+            priceBtcUsdtMarket = getPriceFromUrl(url);
 
-                if(currencyName.equals("BTC")) {
-                    url = BINANCE_URL_BASE + currencyName + USDT_MARKET;
+            for (CryptoCurrency.Coin coin : cryptoCurrency.getCoinList()) {
+                String code = coin.getCode();
+
+                if (code.equals(CODE_BTC)) {
+                    priceBtcMarket = 1;
                 } else {
-                    url = BINANCE_URL_BASE + currencyName + BTC_MARKET;
-                }
-                //Log.d(TAG, url);
-
-                try {
-                    doc = Jsoup.connect(url).ignoreContentType(true).get();
-                    JSONArray jsonArray = new JSONArray(doc.text());
-                    JSONObject jsonObject = (JSONObject) jsonArray.get(0);
-                    price = (double) Double.parseDouble((String) jsonObject.get("p"));
-                    //Log.d(TAG, "" + price);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    price = 0;
+                    url = BINANCE_URL_BASE + code + BTC_MARKET;
+                    priceBtcMarket = getPriceFromUrl(url);
                 }
 
-                mBinanceCurrency.setCurrencyPrice(currencyName, price);
+                double priceUsd = priceBtcMarket * priceBtcUsdtMarket;
+                double priceKrw = priceUsd * 1080;
+
+                coin.setExchangePrice(CryptoCurrency.EXCHANGE_BINANCE, priceKrw, priceUsd);
             }
-            getCallback().onFinish(mBinanceCurrency);
+            getCallback().onFinish(cryptoCurrency);
 
             try {
-                Thread.sleep(8);
+                Thread.sleep(SLEEP_TIME);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
 
         return null;
+    }
+
+    private double getPriceFromUrl(String url) {
+        double price = 0;
+
+        try {
+            Document doc = Jsoup.connect(url).ignoreContentType(true).get();
+            JSONArray jsonArray = new JSONArray(doc.text());
+            JSONObject jsonObject = (JSONObject) jsonArray.get(0);
+            price = (double) Double.parseDouble((String) jsonObject.get("p"));
+            //Log.d(TAG, "" + price);
+        } catch (Exception e) {
+            e.printStackTrace();
+            price = 0;
+        }
+
+        return price;
     }
 }
